@@ -1,0 +1,22 @@
+{
+  "name": "multiplayer-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tinycade/Multiplayer-Server.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Tinycade/Multiplayer-Server/issues"
+  },
+  "homepage": "https://github.com/Tinycade/Multiplayer-Server#readme",
+  "dependencies": {
+    "ws": "^7.5.0"
+  }
+}
