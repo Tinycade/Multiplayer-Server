@@ -1,7 +1,6 @@
-console.log(window);
-
 // Create WebSocket connection.
 const socket = new WebSocket('ws://localhost:3000');
+let socketID = '';
 
 // Connection opened
 socket.addEventListener('open', function (event) {
@@ -19,6 +18,10 @@ socket.addEventListener('message', function (event) {
         // RECIEVE KEY FROM HOST
         // MOVE ON TO HOST SCREEN
       break;
+
+      case 'ASSIGN_ID':
+        socketID = packet.payload;
+        break;
 
       // client -> host
       case 'REQUEST_TO_JOIN':
