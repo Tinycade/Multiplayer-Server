@@ -51,7 +51,7 @@ wss.on('connection', function connection(ws) {
   // WHEN CLIENT SOCKET JOINS GENERATE AND ATTACH ID
   ws.tinycadeUUID = uuidv4();
   allClients[ws.tinycadeID] = ws;
-  ws.send(createPacket('ASSIGN_ID', '', ws.tinycadeID));
+  ws.send(createPacket('ASSIGN_SOCKET_ID', '', ws.tinycadeID));
 
   ws.on('message', function incoming(m) {
     const packet = JSON.parse(m);

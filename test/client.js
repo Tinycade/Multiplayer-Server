@@ -7,6 +7,15 @@ socket.addEventListener('open', function (event) {
     socket.send(JSON.stringify({ type: 'HOST' }));
 });
 
+// client needs to
+// send REQUEST_TO_JOIN with a room key entered and their socketID
+// send UPDATE_HOST periodically with their socketID and varius state stuff
+
+// Host needs to
+// when client joins assigns them a playerID tied to their socketID -> send all clients the player ids when they join
+// parse client updates and alter the state
+// send UPDATE_CLIENT periodically with all the info
+
 // Listen for messages
 socket.addEventListener('message', function (event) {
     const packet = JSON.parse(event.data);
@@ -19,7 +28,7 @@ socket.addEventListener('message', function (event) {
         // MOVE ON TO HOST SCREEN
       break;
 
-      case 'ASSIGN_ID':
+      case 'ASSIGN_SOCKET_ID':
         socketID = packet.payload;
         break;
 
