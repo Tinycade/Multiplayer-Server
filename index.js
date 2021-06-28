@@ -17,7 +17,7 @@ const roomIdString = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 function genRandomId(length) {
   let id = '';
   for (let i = 0; i < length; i++) {
-    id += radomIdString.charAt(Math.floor(Math.random() * randomIdString.length));
+    id += roomIdString.charAt(Math.floor(Math.random() * roomIdString.length));
   }
 
   return id;
@@ -35,62 +35,71 @@ function createRoomID() {
 /* Packet shape
 {
   type: msg type,
-  room_key: only for msgs that go to hosts/clients
+  roomKey: only for msgs that go to hosts/clients
   payload: array or whatever
 }
 */
 function createPacket(type, roomKey, payload) {
-  return {
+  return JSON.stringify({
     type: type,
     roomKey: roomKey,
     payload: payload,
-  };
+  });
 }
 
 wss.on('connection', function connection(ws) {
   // WHEN CLIENT SOCKET JOINS GENERATE AND ATTACH ID
   ws.tinycadeUUID = uuidv4();
-  allClients[ws.tinycadeID] = ws;
+  allClients[ws.tinycadeUUID] = ws;
   ws.send(createPacket('ASSIGN_SOCKET_ID', '', ws.tinycadeID));
 
-  ws.on('message', function incoming(m) {
-    const packet = JSON.parse(m);
-    ws.send(m);
+  ws.on('message', function incoming(rawMessage) {
+    const packet = JSON.parse(rawMessage);
+    // ws.send(m);
     
     switch (packet.type) {
       case 'CREATE_ROOM':
         // GENERATE HOST KEY JACKBOX STYLE
+        console.log(ws.tinycadeUUID, 'wants to create a room');
         const newRoomKey = createRoomID();
         rooms[newRoomKey] = {
           clients: [],
           host: ws.tinycadeUUID,
         }
         // SEND KEY TO HOST on "ROOM_IS_CREATED"
-        ws.send(JSON.stringify(createPacket('ROOM_IS_CREATED', newRoomKey)));
+        ws.send(createPacket('ROOM_IS_CREATED', newRoomKey));
       break;
 
       case 'REQUEST_TO_JOIN':
         // SHOULD HAVE HOST KEY
-
+        if (rooms[packet.roomKey]) {
+          console.log(ws.tinycadeUUID, 'wants to join room', packet.roomKey);
+          const r = rooms[packet.roomKey];
+          allClients[r.host].send(createPacket('REQUEST_TO_JOIN', packet.roomKey, ws.tinycadeUUID));
+        } else {
+          ws.send(createPacket('ROOM_KEY_ERROR', packet.roomKey, 'Room Does Not Exist'));
+        }
         // REQUESTS ID FROM HOST, PASS ALONG WS ID
 
       break;
 
       case 'CONFIRM_JOIN':
         // SHOULD HAVE CLIENT"S PLAYER ID
-        // ALSO SHOULD HAVE CLIENT ID
+        allClients[packet.payload.clientID].send(rawMessage);
+        rooms[packet.roomKey].clients.push(packet.payload.clientID);
       break;
 
       case 'UPDATE_CLIENT':
         // FORWARD TO ALL CLIENTS IN ROOM
         rooms[packet.roomKey].clients.forEach(c => {
-          allClients[c].send(m);
+          // console.log(packet);
+          allClients[c].send(rawMessage);
         });
       break;
 
       case 'UPDATE_HOST':
         // FORWARD TO HOST BASED ON ROOM KEY
-        allClients[rooms[packet.roomKey].host].send(m);
+        allClients[rooms[packet.roomKey].host].send(rawMessage);
       break;
 
       case 'CLOSE_ROOM':
@@ -99,6 +108,7 @@ wss.on('connection', function connection(ws) {
       break;
 
       default:
+        // console.log('Unhandled Message Type', packet.type);
         // FORWARD TO PLAYER
         rooms[packet.roomKey].clients.forEach(c => {
           allClients[c].send(m);

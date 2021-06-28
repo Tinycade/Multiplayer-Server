@@ -60,6 +60,7 @@ socket.addEventListener('message', function (event) {
       break;
 
       default:
+        console.log(packet);
       break;
     }
 });
